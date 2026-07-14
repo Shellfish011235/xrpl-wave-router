@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Wave Router | XRPL Intelligence Pathfinder</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">XRPL COMMONS · MAKE WAVES</p>
+        <h1>Route intelligence.<br><span>Settle value.</span></h1>
+        <p class="lede">Wave Router finds the best AI provider for a task based on cost, quality, latency and privacy, then prepares the payment flow across ILP and XRPL.</p>
+      </div>
+      <div class="status-card">
+        <div class="pulse"></div>
+        <div><strong>Router online</strong><span id="serviceStatus">Checking service…</span></div>
+      </div>
+    </header>
+
+    <section class="metrics">
+      <article><span>Available balance</span><strong id="balance">—</strong><small>demo microunits</small></article>
+      <article><span>Providers online</span><strong id="providerCount">—</strong><small>capability offers</small></article>
+      <article><span>Settlement rail</span><strong>XRPL</strong><small>Testnet adapter</small></article>
+      <article><span>Streaming rail</span><strong>ILP</strong><small>Open Payments boundary</small></article>
+    </section>
+
+    <section class="workspace">
+      <form id="jobForm" class="panel form-panel">
+        <div class="panel-heading"><span>01</span><div><h2>Define the job</h2><p>Set the hard constraints the router must respect.</p></div></div>
+
+        <label>Task
+          <select id="task"><option value="summarize_document">Summarize document</option></select>
+        </label>
+
+        <div class="grid-two">
+          <label>Maximum cost
+            <input id="maxCost" type="number" value="50000" min="1000" step="1000" />
+          </label>
+          <label>Maximum latency
+            <input id="maxLatency" type="number" value="3000" min="100" step="100" />
+          </label>
+        </div>
+
+        <label>Minimum quality <output id="qualityValue">85%</output>
+          <input id="quality" type="range" min="50" max="99" value="85" />
+        </label>
+
+        <label>Privacy requirement
+          <select id="privacy">
+            <option value="standard">Standard</option>
+            <option value="no-retention" selected>No retention</option>
+            <option value="local-only">Local only</option>
+          </select>
+        </label>
+
+        <button type="submit" id="routeButton">Find optimal route</button>
+      </form>
+
+      <section class="panel route-panel">
+        <div class="panel-heading"><span>02</span><div><h2>Provider market</h2><p>Live capability offers evaluated against your constraints.</p></div></div>
+        <div id="providers" class="provider-list"></div>
+      </section>
+    </section>
+
+    <section id="resultPanel" class="panel result-panel hidden">
+      <div class="panel-heading"><span>03</span><div><h2>Optimal intelligence route</h2><p>The selected capability and simulated payment lifecycle.</p></div></div>
+      <div class="result-grid">
+        <div class="chosen-route">
+          <p class="eyebrow">SELECTED PROVIDER</p>
+          <h3 id="selectedProvider">—</h3>
+          <div class="route-stats">
+            <div><span>Cost</span><strong id="selectedCost">—</strong></div>
+            <div><span>Quality</span><strong id="selectedQuality">—</strong></div>
+            <div><span>Latency</span><strong id="selectedLatency">—</strong></div>
+            <div><span>Route score</span><strong id="selectedScore">—</strong></div>
+          </div>
+          <button id="executeButton" class="secondary">Execute routed job</button>
+        </div>
+        <div class="flow" id="flow">
+          <div data-step="quote"><span>1</span><p><strong>Route quoted</strong><small>Provider and price selected</small></p></div>
+          <div data-step="reserve"><span>2</span><p><strong>Funds reserved</strong><small>TigerBeetle pending transfer</small></p></div>
+          <div data-step="execute"><span>3</span><p><strong>Provider executes</strong><small>Capability performs the task</small></p></div>
+          <div data-step="stream"><span>4</span><p><strong>Payment streamed</strong><small>ILP / Open Payments</small></p></div>
+          <div data-step="settle"><span>5</span><p><strong>Settlement prepared</strong><small>XRPL payment route</small></p></div>
+        </div>
+      </div>
+      <pre id="jobOutput" class="job-output hidden"></pre>
+    </section>
+
+    <footer>Wave Router · standalone XRPL intelligence routing prototype</footer>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
