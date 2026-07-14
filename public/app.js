@@ -2,6 +2,7 @@ const $ = (id) => document.getElementById(id);
 const state = { providers: [], quote: null, health: null };
 
 function ensurePromptField() {
+  document.querySelector(".brand-lockup .eyebrow")?.remove();
   if ($("prompt")) return;
   const taskSelect = $("task");
   const taskLabel = taskSelect.closest("label");
