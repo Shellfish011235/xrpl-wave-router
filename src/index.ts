@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const publicDir = path.resolve(__dirname, "../public");
 
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.static(publicDir));
 
 const ledger = new InMemoryLedger();
@@ -26,7 +26,8 @@ app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "xrpl-wave-router",
-    version: "0.1.0",
+    version: "0.2.0",
+    execution: process.env.OPENAI_API_KEY ? "live" : "demo",
     rails: {
       xrpl: "adapter-ready",
       ilp: "simulated",
@@ -50,6 +51,7 @@ app.get("/jobs", (_req, res) => {
 app.post("/quote", (req, res) => {
   try {
     const request = req.body as JobRequest;
+    if (!request.prompt?.trim()) throw new Error("Enter a task prompt before routing.");
     res.json(findBestRoute(request, providerOffers));
   } catch (error) {
     res.status(422).json({
@@ -63,8 +65,9 @@ app.post("/jobs", async (req, res) => {
 
   try {
     const request = req.body as JobRequest;
-    const route = findBestRoute(request, providerOffers);
+    if (!request.prompt?.trim()) throw new Error("Enter a task prompt before execution.");
 
+    const route = findBestRoute(request, providerOffers);
     await ledger.reserve(jobId, route.reservedMicrounits);
 
     const paymentQuote = await payments.quote(
@@ -72,7 +75,7 @@ app.post("/jobs", async (req, res) => {
       String(route.reservedMicrounits),
     );
 
-    const output = await executeProvider(route.provider, request.task);
+    const execution = await executeProvider(route.provider, request);
     await ledger.post(jobId, route.reservedMicrounits);
 
     const result: JobResult & {
@@ -82,9 +85,14 @@ app.post("/jobs", async (req, res) => {
     } = {
       jobId,
       providerId: route.provider.id,
-      output,
+      output: execution.output,
       chargedMicrounits: route.reservedMicrounits,
       routeScore: route.score,
+      executionMode: execution.executionMode,
+      model: execution.model,
+      durationMs: execution.durationMs,
+      inputTokens: execution.inputTokens,
+      outputTokens: execution.outputTokens,
       paymentQuote,
       createdAt: new Date().toISOString(),
       status: "completed",
@@ -92,7 +100,6 @@ app.post("/jobs", async (req, res) => {
 
     recentJobs.unshift(result);
     if (recentJobs.length > 100) recentJobs.length = 100;
-
     res.status(201).json(result);
   } catch (error) {
     await ledger.void(jobId);
