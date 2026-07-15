@@ -4,7 +4,7 @@ import crypto from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { InMemoryLedger } from "./adapters/ledger.js";
-import { DisabledOpenPaymentsAdapter } from "./adapters/openPayments.js";
+import { SimulatedIlpAdapter } from "./adapters/openPayments.js";
 import { executeProvider } from "./services/executor.js";
 import { providerOffers } from "./services/providers.js";
 import { findBestRoute } from "./services/router.js";
@@ -19,19 +19,20 @@ app.use(express.json({ limit: "1mb" }));
 app.use(express.static(publicDir));
 
 const ledger = new InMemoryLedger();
-const payments = new DisabledOpenPaymentsAdapter();
+const ilp = new SimulatedIlpAdapter();
 const recentJobs: Array<JobResult & { createdAt: string; status: "completed" }> = [];
 
 app.get("/health", (_req, res) => {
   res.json({
     ok: true,
     service: "xrpl-wave-router",
-    version: "0.2.0",
+    version: "0.3.0",
     execution: process.env.OPENAI_API_KEY ? "live" : "demo",
     rails: {
-      xrpl: "adapter-ready",
-      ilp: "simulated",
-      tigerBeetle: "simulated",
+      intelligenceRouting: "pathfinder",
+      paymentRouting: "ILP",
+      settlementTarget: "XRPL",
+      x402: "optional-handshake",
     },
   });
 });
@@ -70,16 +71,18 @@ app.post("/jobs", async (req, res) => {
     const route = findBestRoute(request, providerOffers);
     await ledger.reserve(jobId, route.reservedMicrounits);
 
-    const paymentQuote = await payments.quote(
-      route.provider.walletAddress ?? "https://example.invalid/provider",
+    const ilpQuote = await ilp.quote(
+      route.provider.walletAddress ?? `https://providers.wave-router.local/${route.provider.id}`,
       String(route.reservedMicrounits),
     );
 
     const execution = await executeProvider(route.provider, request);
+    const ilpReceipt = await ilp.pay(ilpQuote);
     await ledger.post(jobId, route.reservedMicrounits);
 
     const result: JobResult & {
-      paymentQuote: unknown;
+      paymentRoute: unknown;
+      paymentReceipt: unknown;
       createdAt: string;
       status: "completed";
     } = {
@@ -93,7 +96,8 @@ app.post("/jobs", async (req, res) => {
       durationMs: execution.durationMs,
       inputTokens: execution.inputTokens,
       outputTokens: execution.outputTokens,
-      paymentQuote,
+      paymentRoute: ilpQuote,
+      paymentReceipt: ilpReceipt,
       createdAt: new Date().toISOString(),
       status: "completed",
     };
