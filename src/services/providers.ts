@@ -30,5 +30,15 @@ export const providerOffers: ProviderOffer[] = [
     privacy: "no-retention",
     available: true,
     acceptedAsset: { currency: "XRP" },
-  }
+  },
+  {
+    id: "shellfish-research-bridge",
+    capability: "EXTERNAL_RESEARCH",
+    priceMicrounits: 0,
+    latencyMs: 5000,
+    quality: 0.9,
+    privacy: "no-retention",
+    available: true,
+    acceptedAsset: { currency: "XRP" },
+  },
 ];
