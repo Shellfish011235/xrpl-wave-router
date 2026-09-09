@@ -1,4 +1,4 @@
-import { Client, type RipplePathFindRequest } from "xrpl";
+import { Client, type Amount, type RipplePathFindRequest } from "xrpl";
 
 export class XrplSettlementAdapter {
   constructor(private readonly server: string) {}
@@ -6,11 +6,7 @@ export class XrplSettlementAdapter {
   async findSettlementPaths(input: {
     sourceAccount: string;
     destinationAccount: string;
-    destinationAmount: {
-      currency: string;
-      issuer?: string;
-      value: string;
-    };
+    destinationAmount: Amount;
     sourceCurrencies?: Array<{ currency: string; issuer?: string }>;
   }) {
     const client = new Client(this.server);
