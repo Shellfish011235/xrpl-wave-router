@@ -1,5 +1,19 @@
 export type PrivacyClass = "standard" | "no-retention" | "local-only";
 
+export interface AssuranceGrant {
+  grantId: string;
+  signature: string;
+  authorized: true;
+  issuedAt: string;
+  expiresAt: string;
+  nonce: string;
+  task: string;
+  providerId: string;
+  maxCostMicrounits: number;
+  allowPayment: false;
+  allowTrustedMemoryWrite: false;
+}
+
 export interface ProviderOffer {
   id: string;
   capability: string;
