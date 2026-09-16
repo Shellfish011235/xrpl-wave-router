@@ -82,6 +82,15 @@ app.post("/jobs", async (req, res) => {
     const request = req.body as JobRequest;
     const route = findBestRoute(request, providerOffers);
 
+    if (assuranceGrant.task !== request.task || assuranceGrant.providerId !== route.provider.id || assuranceGrant.maxCostMicrounits < route.reservedMicrounits) {
+      await ledger.void(jobId);
+      res.status(403).json({
+        jobId,
+        error: "ASSURANCE_MISMATCH",
+      });
+      return;
+    }
+
     await ledger.reserve(jobId, route.reservedMicrounits);
 
     const paymentQuote = await payments.quote(

@@ -68,7 +68,7 @@ test("rejects expired assurance grant", async () => {
     const address = server.address();
     assert.ok(address && typeof address === "object");
     const now = Date.now();
-    const response = await fetch(, {
+    const response = await fetch("http://127.0.0.1:" + address.port + "/jobs", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
