@@ -77,15 +77,6 @@ app.post("/jobs", async (req, res) => {
     return;
   }
 
-  if (usedAssuranceNonces.has(assuranceGrant.nonce)) {
-    res.status(403).json({
-      error: "ASSURANCE_REPLAYED",
-    });
-    return;
-  }
-
-  usedAssuranceNonces.add(assuranceGrant.nonce);
-
   const jobId = crypto.randomUUID();
 
   try {
@@ -100,6 +91,16 @@ app.post("/jobs", async (req, res) => {
       });
       return;
     }
+
+    if (usedAssuranceNonces.has(assuranceGrant.nonce)) {
+      res.status(403).json({
+        jobId,
+        error: "ASSURANCE_REPLAYED",
+      });
+      return;
+    }
+
+    usedAssuranceNonces.add(assuranceGrant.nonce);
 
     await ledger.reserve(jobId, route.reservedMicrounits);
 
