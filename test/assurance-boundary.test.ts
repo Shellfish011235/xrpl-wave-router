@@ -160,3 +160,24 @@ test("executes job with valid assurance grant", async () => {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 });
+
+test("rejects reuse of assurance grant nonce", async () => {
+  const server = app.listen(0);
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+    const now = Date.now();
+    const grant = { grantId: "grant-replay", signature: "test-signature", authorized: true, issuedAt: new Date(now - 1000).toISOString(), expiresAt: new Date(now + 60000).toISOString(), nonce: "nonce-replay", task: "summarize_document", providerId: "small-fast-1", maxCostMicrounits: 50000, allowPayment: false, allowTrustedMemoryWrite: false };
+    const requestBody = { task: "summarize_document", maxCostMicrounits: 50000, maxLatencyMs: 3000, minimumQuality: 0.85, privacy: "no-retention", assuranceGrant: grant };
+    const url = "http://127.0.0.1:" + address.port + "/jobs";
+    const options = { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(requestBody) };
+    const first = await fetch(url, options);
+    assert.equal(first.status, 201);
+    const second = await fetch(url, options);
+    const body = await second.json();
+    assert.equal(second.status, 403);
+    assert.equal(body.error, "ASSURANCE_REPLAYED");
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+});

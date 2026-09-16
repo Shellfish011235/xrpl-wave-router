@@ -16,6 +16,7 @@ app.use(express.json());
 
 const ledger = new InMemoryLedger();
 const payments = new DisabledOpenPaymentsAdapter();
+const usedAssuranceNonces = new Set<string>();
 
 function isStructurallyValidAssuranceGrant(grant: unknown): grant is AssuranceGrant {
   if (grant === null || typeof grant !== "object") return false;
@@ -75,6 +76,15 @@ app.post("/jobs", async (req, res) => {
     });
     return;
   }
+
+  if (usedAssuranceNonces.has(assuranceGrant.nonce)) {
+    res.status(403).json({
+      error: "ASSURANCE_REPLAYED",
+    });
+    return;
+  }
+
+  usedAssuranceNonces.add(assuranceGrant.nonce);
 
   const jobId = crypto.randomUUID();
 
