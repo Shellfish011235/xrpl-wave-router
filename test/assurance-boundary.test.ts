@@ -99,3 +99,18 @@ test("rejects expired assurance grant", async () => {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 });
+
+test("rejects assurance grant with mismatched task", async () => {
+  const server = app.listen(0);
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+    const now = Date.now();
+    const response = await fetch("http://127.0.0.1:" + address.port + "/jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ task: "summarize_document", maxCostMicrounits: 50000, maxLatencyMs: 3000, minimumQuality: 0.85, privacy: "no-retention", assuranceGrant: { grantId: "grant-task-mismatch", signature: "test-signature", authorized: true, issuedAt: new Date(now - 1000).toISOString(), expiresAt: new Date(now + 60000).toISOString(), nonce: "nonce-task-mismatch", task: "different_task", providerId: "small-fast-1", maxCostMicrounits: 50000, allowPayment: false, allowTrustedMemoryWrite: false } }) });
+    const body = await response.json();
+    assert.equal(response.status, 403);
+    assert.equal(body.error, "ASSURANCE_MISMATCH");
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+});
