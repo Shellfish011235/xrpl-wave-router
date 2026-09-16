@@ -196,3 +196,22 @@ test("rejects assurance grant issued in the future", async () => {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
 });
+
+test("rejected assurance mismatch does not change ledger balance", async () => {
+  const server = app.listen(0);
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address === "object");
+    const base = "http://127.0.0.1:" + address.port;
+    const before = await fetch(base + "/balance");
+    const beforeBody = await before.json();
+    const now = Date.now();
+    const response = await fetch(base + "/jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ task: "summarize_document", maxCostMicrounits: 50000, maxLatencyMs: 3000, minimumQuality: 0.85, privacy: "no-retention", assuranceGrant: { grantId: "grant-balance-mismatch", signature: "test-signature", authorized: true, issuedAt: new Date(now - 1000).toISOString(), expiresAt: new Date(now + 60000).toISOString(), nonce: "nonce-balance-mismatch", task: "different_task", providerId: "small-fast-1", maxCostMicrounits: 50000, allowPayment: false, allowTrustedMemoryWrite: false } }) });
+    assert.equal(response.status, 403);
+    const after = await fetch(base + "/balance");
+    const afterBody = await after.json();
+    assert.equal(afterBody.availableMicrounits, beforeBody.availableMicrounits);
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+});
