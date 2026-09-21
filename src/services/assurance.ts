@@ -14,7 +14,13 @@ function canonicalize(value: unknown): string {
     return "{" + entries.join(",") + "}";
   }
 
-  return JSON.stringify(value);
+  const serialized = JSON.stringify(value);
+
+  if (serialized === undefined) {
+    throw new Error("Assurance grant contains a non-serializable value.");
+  }
+
+  return serialized;
 }
 
 export function canonicalAssuranceGrantBytes(
