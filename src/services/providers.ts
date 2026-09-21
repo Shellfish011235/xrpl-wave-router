@@ -32,6 +32,16 @@ export const providerOffers: ProviderOffer[] = [
     acceptedAsset: { currency: "XRP" },
   },
   {
+    id: "shellfish-candidate-patch",
+    capability: "DRAFT_PATCH",
+    priceMicrounits: 0,
+    latencyMs: 30000,
+    quality: 0.99,
+    privacy: "local-only",
+    available: true,
+    acceptedAsset: { currency: "XRP" },
+  },
+  {
     id: "shellfish-repo-inspector",
     capability: "REPO_INSPECTION",
     priceMicrounits: 0,
