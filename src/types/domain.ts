@@ -1,18 +1,35 @@
 export type PrivacyClass = "standard" | "no-retention" | "local-only";
 
-export interface AssuranceGrant {
-  grantId: string;
-  signature: string;
-  signatureAlgorithm: "HMAC-SHA256";
-  authorized: true;
-  issuedAt: string;
-  expiresAt: string;
+export interface ExecutionGrant {
+  grant_id: string;
+  task_id: string;
   nonce: string;
-  task: string;
-  providerId: string;
-  maxCostMicrounits: number;
-  allowPayment: false;
-  allowTrustedMemoryWrite: false;
+  route_receipt_id: string;
+  route_receipt_hash: string;
+  provider_id: string;
+  capability: string;
+  max_cost_microunits: number;
+  execution_allowed: true;
+  network_allowed: true;
+  payment_allowed: false;
+  trusted_memory_write_allowed: false;
+  created_at: string;
+  expires_at: string;
+  signature_algorithm: "HMAC-SHA256";
+  signature: string;
+}
+
+export interface RouteReceipt {
+  receipt_id: string;
+  receipt_hash: string;
+  task_id: string;
+  provider_id: string;
+  capability_required: string;
+  reserved_microunits: number;
+  execution_authorized?: boolean;
+  payment_authorized?: boolean;
+  trusted_memory_write_authorized?: boolean;
+  [key: string]: unknown;
 }
 
 export interface ProviderOffer {
@@ -37,6 +54,12 @@ export interface JobRequest {
   maxLatencyMs: number;
   minimumQuality: number;
   privacy: PrivacyClass;
+}
+
+export interface AuthorizedJobRequest extends JobRequest {
+  taskId: string;
+  routeReceipt: RouteReceipt;
+  executionGrant: ExecutionGrant;
 }
 
 export interface RouteQuote {
