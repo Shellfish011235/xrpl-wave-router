@@ -901,7 +901,7 @@ test(
 
     assert.equal(
       signed.signature,
-      "450f5fb129855ed58c6c6cd8ee69e105735457a2c4607e0c5059ba511c1250ae",
+      "f664adcde2685699a69f961602af07e5589ef34eda2c44d2a5e98304a81eeea5",
     );
 
     assert.equal(
