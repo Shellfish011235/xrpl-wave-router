@@ -3,6 +3,7 @@ export type PrivacyClass = "standard" | "no-retention" | "local-only";
 export interface AssuranceGrant {
   grantId: string;
   signature: string;
+  signatureAlgorithm: "HMAC-SHA256";
   authorized: true;
   issuedAt: string;
   expiresAt: string;
