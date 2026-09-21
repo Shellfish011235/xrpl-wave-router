@@ -1,5 +1,8 @@
 import crypto from "node:crypto";
-import type { AssuranceGrant } from "../types/domain.js";
+import type {
+  ExecutionGrant,
+  RouteReceipt,
+} from "../types/domain.js";
 
 function canonicalize(value: unknown): string {
   if (Array.isArray(value)) {
@@ -7,9 +10,15 @@ function canonicalize(value: unknown): string {
   }
 
   if (value !== null && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([key, entryValue]) => JSON.stringify(key) + ":" + canonicalize(entryValue));
+    const record = value as Record<string, unknown>;
+    const entries = Object.keys(record)
+      .sort()
+      .map(
+        (key) =>
+          JSON.stringify(key) +
+          ":" +
+          canonicalize(record[key]),
+      );
 
     return "{" + entries.join(",") + "}";
   }
@@ -17,43 +26,61 @@ function canonicalize(value: unknown): string {
   const serialized = JSON.stringify(value);
 
   if (serialized === undefined) {
-    throw new Error("Assurance grant contains a non-serializable value.");
+    throw new Error(
+      "Assurance payload contains a non-serializable value.",
+    );
   }
 
   return serialized;
 }
 
-export function canonicalAssuranceGrantBytes(
-  grant: AssuranceGrant | Record<string, unknown>,
-): Buffer {
-  const unsigned = Object.fromEntries(
-    Object.entries(grant).filter(([key]) => key !== "signature"),
+function unsignedRecord(
+  value: Record<string, unknown>,
+  excludedField: string,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      ([key]) => key !== excludedField,
+    ),
   );
-
-  return Buffer.from(canonicalize(unsigned), "utf8");
 }
 
 function assuranceKeyFromEnvironment(): Buffer | null {
-  const keyHex = process.env.SHELLFISH_ASSURANCE_HMAC_KEY_HEX?.trim();
+  const keyHex =
+    process.env.SHELLFISH_ASSURANCE_HMAC_KEY_HEX?.trim();
 
-  if (!keyHex || !/^[0-9a-fA-F]{64}$/.test(keyHex)) {
+  if (
+    !keyHex ||
+    !/^[0-9a-fA-F]{64}$/.test(keyHex)
+  ) {
     return null;
   }
 
   return Buffer.from(keyHex, "hex");
 }
 
-export function verifyAssuranceGrantSignature(grant: AssuranceGrant): boolean {
+export function canonicalExecutionGrantBytes(
+  grant: ExecutionGrant | Record<string, unknown>,
+): Buffer {
+  const unsigned = unsignedRecord(
+    grant as Record<string, unknown>,
+    "signature",
+  );
+
+  return Buffer.from(
+    canonicalize(unsigned),
+    "utf8",
+  );
+}
+
+export function verifyExecutionGrantSignature(
+  grant: ExecutionGrant,
+): boolean {
   const key = assuranceKeyFromEnvironment();
 
   if (!key) {
     return false;
   }
-
-  const expected = crypto
-    .createHmac("sha256", key)
-    .update(canonicalAssuranceGrantBytes(grant))
-    .digest("hex");
 
   const supplied = grant.signature.trim();
 
@@ -61,31 +88,102 @@ export function verifyAssuranceGrantSignature(grant: AssuranceGrant): boolean {
     return false;
   }
 
-  const expectedBuffer = Buffer.from(expected, "hex");
-  const suppliedBuffer = Buffer.from(supplied, "hex");
+  const expected = crypto
+    .createHmac("sha256", key)
+    .update(canonicalExecutionGrantBytes(grant))
+    .digest("hex");
+
+  const expectedBuffer = Buffer.from(
+    expected,
+    "hex",
+  );
+  const suppliedBuffer = Buffer.from(
+    supplied,
+    "hex",
+  );
 
   return (
     expectedBuffer.length === suppliedBuffer.length &&
-    crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)
+    crypto.timingSafeEqual(
+      expectedBuffer,
+      suppliedBuffer,
+    )
   );
 }
 
-export function signAssuranceGrantForTest(
-  grant: Omit<AssuranceGrant, "signature">,
+export function canonicalRouteReceiptBytes(
+  receipt: RouteReceipt | Record<string, unknown>,
+): Buffer {
+  const unsigned = unsignedRecord(
+    receipt as Record<string, unknown>,
+    "receipt_hash",
+  );
+
+  return Buffer.from(
+    canonicalize(unsigned),
+    "utf8",
+  );
+}
+
+export function calculateRouteReceiptHash(
+  receipt: RouteReceipt | Record<string, unknown>,
+): string {
+  return crypto
+    .createHash("sha256")
+    .update(canonicalRouteReceiptBytes(receipt))
+    .digest("hex");
+}
+
+export function verifyRouteReceiptHash(
+  receipt: RouteReceipt,
+): boolean {
+  const supplied = receipt.receipt_hash.trim();
+
+  if (!/^[0-9a-fA-F]{64}$/.test(supplied)) {
+    return false;
+  }
+
+  const expected =
+    calculateRouteReceiptHash(receipt);
+
+  const expectedBuffer = Buffer.from(
+    expected,
+    "hex",
+  );
+  const suppliedBuffer = Buffer.from(
+    supplied,
+    "hex",
+  );
+
+  return crypto.timingSafeEqual(
+    expectedBuffer,
+    suppliedBuffer,
+  );
+}
+
+export function signExecutionGrantForTest(
+  grant: Omit<ExecutionGrant, "signature">,
   keyHex: string,
-): AssuranceGrant {
+): ExecutionGrant {
   if (!/^[0-9a-fA-F]{64}$/.test(keyHex)) {
-    throw new Error("Test assurance key must be 32 bytes encoded as hex.");
+    throw new Error(
+      "Test assurance key must be 32 bytes encoded as hex.",
+    );
   }
 
   const unsigned = {
     ...grant,
     signature: "",
-  } satisfies AssuranceGrant;
+  } satisfies ExecutionGrant;
 
   const signature = crypto
-    .createHmac("sha256", Buffer.from(keyHex, "hex"))
-    .update(canonicalAssuranceGrantBytes(unsigned))
+    .createHmac(
+      "sha256",
+      Buffer.from(keyHex, "hex"),
+    )
+    .update(
+      canonicalExecutionGrantBytes(unsigned),
+    )
     .digest("hex");
 
   return {
