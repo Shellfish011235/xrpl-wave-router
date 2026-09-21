@@ -43,3 +43,16 @@ The default MVP uses an in-memory ledger. TigerBeetle and Open Payments are inte
 - Add Open Payments quotes and outgoing payments.
 - Settle provider net balances periodically through XRPL.
 - Only then consider issuing standardized compute credits.
+
+
+## Regime-aware routing direction
+
+The planned next routing layer is:
+
+```text
+Regime state → liquidity graph → risk graph → settlement graph → Wave Router/XRPL pathfinding → assurance grant validation → execution rail
+```
+
+The router may explain and rank routes, but route quality is never permission to execute. The first version remains observational, and Testnet execution must stay behind the existing assurance boundary. No automatic Mainnet fallback is permitted.
+
+See `docs/regime-aware-pathfinder.md`.
