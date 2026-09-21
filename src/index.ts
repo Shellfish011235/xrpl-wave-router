@@ -5,8 +5,10 @@ import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { InMemoryLedger } from "./adapters/ledger.js";
 import { DisabledOpenPaymentsAdapter } from "./adapters/openPayments.js";
+import { verifyAssuranceGrantSignature } from "./services/assurance.js";
 import { executeProvider } from "./services/executor.js";
 import { providerOffers } from "./services/providers.js";
+import { consumeAssuranceNonce } from "./services/replayStore.js";
 import { findBestRoute } from "./services/router.js";
 import type { AssuranceGrant, JobRequest, JobResult } from "./types/domain.js";
 
@@ -16,12 +18,11 @@ app.use(express.json());
 
 const ledger = new InMemoryLedger();
 const payments = new DisabledOpenPaymentsAdapter();
-const usedAssuranceNonces = new Set<string>();
 
 function isStructurallyValidAssuranceGrant(grant: unknown): grant is AssuranceGrant {
   if (grant === null || typeof grant !== "object") return false;
   const candidate = grant as Record<string, unknown>;
-  return typeof candidate.grantId === "string" && candidate.grantId.length > 0 && typeof candidate.signature === "string" && candidate.signature.length > 0 && candidate.authorized === true && typeof candidate.issuedAt === "string" && typeof candidate.expiresAt === "string" && typeof candidate.nonce === "string" && candidate.nonce.length > 0 && typeof candidate.task === "string" && candidate.task.length > 0 && typeof candidate.providerId === "string" && candidate.providerId.length > 0 && typeof candidate.maxCostMicrounits === "number" && Number.isSafeInteger(candidate.maxCostMicrounits) && candidate.maxCostMicrounits >= 0 && candidate.allowPayment === false && candidate.allowTrustedMemoryWrite === false;
+  return typeof candidate.grantId === "string" && candidate.grantId.length > 0 && typeof candidate.signature === "string" && candidate.signature.length > 0 && candidate.signatureAlgorithm === "HMAC-SHA256" && candidate.authorized === true && typeof candidate.issuedAt === "string" && typeof candidate.expiresAt === "string" && typeof candidate.nonce === "string" && candidate.nonce.length > 0 && typeof candidate.task === "string" && candidate.task.length > 0 && typeof candidate.providerId === "string" && candidate.providerId.length > 0 && typeof candidate.maxCostMicrounits === "number" && Number.isSafeInteger(candidate.maxCostMicrounits) && candidate.maxCostMicrounits >= 0 && candidate.allowPayment === false && candidate.allowTrustedMemoryWrite === false;
 }
 
 function isTemporallyValidAssuranceGrant(grant: AssuranceGrant, now = Date.now()): boolean {
@@ -77,6 +78,13 @@ app.post("/jobs", async (req, res) => {
     return;
   }
 
+  if (!verifyAssuranceGrantSignature(assuranceGrant)) {
+    res.status(403).json({
+      error: "ASSURANCE_SIGNATURE_INVALID",
+    });
+    return;
+  }
+
   const jobId = crypto.randomUUID();
 
   try {
@@ -92,15 +100,18 @@ app.post("/jobs", async (req, res) => {
       return;
     }
 
-    if (usedAssuranceNonces.has(assuranceGrant.nonce)) {
+    if (
+      !consumeAssuranceNonce(
+        assuranceGrant.nonce,
+        assuranceGrant.expiresAt,
+      )
+    ) {
       res.status(403).json({
         jobId,
         error: "ASSURANCE_REPLAYED",
       });
       return;
     }
-
-    usedAssuranceNonces.add(assuranceGrant.nonce);
 
     await ledger.reserve(jobId, route.reservedMicrounits);
 
