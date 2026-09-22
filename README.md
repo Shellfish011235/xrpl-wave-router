@@ -68,6 +68,82 @@ EXECUTOR:   "Perform only the already-authorized action."
 
 The router must not turn its own score, recommendation, or pathfinding result into execution authority.
 
+## Related Shellfish architecture
+
+The Wave Router is one component of a broader Shellfish architecture. Identity, authorization, routing, execution, memory, verification, and settlement are intentionally kept as separate concerns.
+
+```text
+Human / client intent
+        ↓
+Agent architecture / orchestration
+        ↓
+Chimera identity + provenance
+        ↓
+Shellfish Agent Control
+policy • evidence • authorization • grants
+        ↓
+Wave Router
+provider • capability • route • settlement optimization
+        ↓
+Bounded executors / providers / tools
+        ↓
+Verification + result handling
+        ↓
+XRPL / ILP / future settlement rails
+```
+
+### Shellfish Agent Control
+
+[Shellfish Agent Control](https://github.com/Shellfish011235/shellfish-agent-control) is the authorization and assurance side of the system.
+
+Its role is distinct from the Wave Router. Agent Control is responsible for policy evaluation, evidence binding, capability authorization, signed execution grants, controlled execution boundaries, verification, and final policy gating.
+
+The Wave Router may propose or select a route. Agent Control determines whether that specific routed action is authorized.
+
+### Agent architecture
+
+The wider agent architecture coordinates specialized agents, tools, research, evidence retrieval, routing, verification, and execution while preserving human oversight and bounded permissions.
+
+The architectural goal is not one all-powerful autonomous agent. It is a graph of specialized components with explicit responsibilities, constrained capabilities, and verifiable handoffs.
+
+### Chimera Identity
+
+**Chimera Identity** is the developing identity and provenance layer for the broader system.
+
+Its intended responsibility is to help answer questions such as:
+
+- which agent, model, tool, or executor produced an action
+- what identity or role was active at the time
+- which capabilities belonged to that identity
+- what authorization chain permitted the action
+- what evidence, route receipt, or execution grant the action was bound to
+- how continuity can be preserved across changing models, workers, or agent instances without treating every component as the same actor
+
+Chimera Identity should remain separate from route scoring and from execution authority. Identity can establish **who or what is acting** and provide provenance; it should not automatically answer **whether the action is allowed**.
+
+Chimera is currently an architectural layer rather than a standalone repository linked from this project. A dedicated design document or repository can be added as the specification becomes stable.
+
+### Human control and system state
+
+The broader Shellfish system also maintains a human-facing control and documentation layer for architecture state, evidence, decisions, recovery context, and operating boundaries.
+
+That layer is intentionally outside the Wave Router runtime. The router should consume only the bounded context and authorization artifacts needed for a specific routing decision or execution.
+
+### Settlement layer
+
+XRPL pathfinding, future ILP/Open Payments integration, internal accounting adapters, and other rails belong to the settlement side of the architecture.
+
+The separation remains:
+
+```text
+Identity says who.
+Policy says what is allowed.
+Routing says where/how.
+Execution performs the bounded action.
+Verification checks what happened.
+Settlement moves value only when separately authorized.
+```
+
 ## Assurance boundary
 
 `POST /jobs` fails closed unless it receives both a valid route receipt and a valid execution grant.
