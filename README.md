@@ -428,3 +428,26 @@ Verification:
 - XRPL read-only commit: `5042411`
 
 This checkpoint preserves a hard separation between XRPL observation and any future transaction-producing capability.
+
+
+### XRPL Testnet/Devnet transaction intent boundary
+
+Wave Router now models a non-executing XRPL transaction intent that is restricted to Testnet or Devnet and bound to existing Shellfish provenance.
+
+Verified behavior:
+
+- Mainnet intents are rejected
+- task, route receipt ID/hash, provider, and capability bindings are enforced
+- XRP amounts are normalized as integer drops
+- existing execution grants are not reinterpreted as payment authority
+- transaction building, signing, and submission remain unauthorized
+- human approval remains required
+
+Verification:
+
+- TypeScript typecheck: green
+- full Wave Router test suite: **60 passed**
+- `git diff --check`: clean
+- transaction-intent commit: `b255fa1`
+
+This checkpoint adds intent/provenance only. It does not create, sign, or submit XRPL transactions.
