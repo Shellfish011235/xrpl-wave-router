@@ -13,6 +13,7 @@ import { executeProvider } from "./services/executor.js";
 import { providerOffers } from "./services/providers.js";
 import { consumeAssuranceNonce } from "./services/replayStore.js";
 import { findBestRoute } from "./services/router.js";
+import { buildSettlementIntent } from "./services/settlementIntent.js";
 import type {
   AuthorizedJobRequest,
   ExecutionGrant,
