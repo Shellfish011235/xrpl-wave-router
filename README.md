@@ -1,3 +1,13 @@
+# XRPL Wave Router
+
+> **Current development status — 2026-09-24:** the active assurance-gated implementation is on branch `assurance-router-boundary-v1`. The default `main` branch below preserves the earlier MVP baseline and should not be mistaken for the current authenticated execution design.
+
+The active branch separates route optimization from authorization and includes signed Shellfish execution grants, route-receipt integrity binding, expiry/cost/capability checks, and durable replay protection. Payment authority, custody, autonomous signing, and trusted-memory write authority remain disabled.
+
+See the `assurance-router-boundary-v1` README for the current architecture.
+
+---
+
 # XRPL AI Pathfinder MVP
 
 A proof-of-concept that routes an AI job to the cheapest qualified provider, reserves an internal balance, executes the job, and prepares an XRPL settlement quote.
