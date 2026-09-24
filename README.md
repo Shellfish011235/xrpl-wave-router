@@ -359,3 +359,24 @@ Verification for this slice:
 - commit: `0cef71d`
 
 This remains internal simulated accounting only. It does not add custody, real settlement, or unilateral financial authority.
+
+
+### Open Payments quote-only sandbox
+
+The Open Payments adapter now exposes a deliberately non-settling sandbox surface:
+
+- destination inspection is observational only
+- quotes are simulated and use integer-string amounts
+- quote results explicitly keep payment, settlement, and wallet-signing authority false
+- invalid destinations and amounts fail closed
+- `pay()` throws by design while sandbox mode is active
+
+Verification:
+
+- TypeScript typecheck: green
+- full Wave Router test suite: **32 passed**
+- `git diff --check`: clean
+- working tree clean after rebase/push
+- Open Payments sandbox commit after rebase: `f29aa2a`
+
+This checkpoint does not add spend authority, outgoing payments, custody, wallet signing, or XRPL submission.
