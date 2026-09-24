@@ -451,3 +451,26 @@ Verification:
 - transaction-intent commit: `b255fa1`
 
 This checkpoint adds intent/provenance only. It does not create, sign, or submit XRPL transactions.
+
+
+### XRPL unsigned transaction draft checkpoint
+
+Wave Router can now transform a validated Testnet/Devnet transaction intent into a deterministic local Payment-shaped draft while keeping all transaction authority disabled.
+
+Verified behavior:
+
+- deterministic unsigned Payment draft construction
+- Testnet/Devnet network boundary preserved
+- task, route, provider, source, destination, and amount provenance preserved
+- transaction build, wallet signing, transaction submission, and Mainnet authority remain false
+- human approval remains required
+- tampered authority flags fail closed
+
+Verification:
+
+- TypeScript typecheck: green
+- full Wave Router test suite: **69 passed**
+- `git diff --check`: clean
+- unsigned-draft commit: `8e04d86`
+
+The draft is local metadata only. It is not autofilled, signed, encoded, submitted, or broadcast.
