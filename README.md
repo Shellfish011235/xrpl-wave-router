@@ -404,3 +404,27 @@ Verification:
 - resource/reconciliation commit: `959c73d`
 
 This remains a local sandbox only. It does not add outgoing payments, spend grants, custody, wallet signing, or XRPL transaction submission.
+
+
+### XRPL read-only inspection checkpoint
+
+The Wave Router XRPL adapter now supports deterministic, testable read-only inspection.
+
+Verified behavior:
+
+- reads XRPL server metadata
+- reads validated account state
+- performs read-only `ripple_path_find`
+- disconnects the XRPL client on success and failure
+- validates required account inputs before opening a connection
+- injectable read client keeps tests offline and deterministic
+- no signing, submission, custody, or payment execution authority is present
+
+Verification:
+
+- TypeScript typecheck: green
+- full Wave Router test suite: **48 passed**
+- `git diff --check`: clean
+- XRPL read-only commit: `5042411`
+
+This checkpoint preserves a hard separation between XRPL observation and any future transaction-producing capability.
