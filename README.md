@@ -380,3 +380,27 @@ Verification:
 - Open Payments sandbox commit after rebase: `f29aa2a`
 
 This checkpoint does not add spend authority, outgoing payments, custody, wallet signing, or XRPL submission.
+
+
+### Open Payments resource reconciliation sandbox
+
+The sandbox now models a local receiver resource, quote resource, and reconciliation record without creating any outgoing payment.
+
+Verified behavior:
+
+- simulated receiver resources remain non-authorizing
+- simulated quote resources stay bound to the receiver and destination
+- reconciliation records preserve expected debit/receive amounts and asset metadata
+- stored resources are returned as copies so callers cannot mutate internal state
+- unknown receiver/quote lookups fail closed
+- payment execution remains disabled
+
+Verification:
+
+- TypeScript typecheck: green
+- full Wave Router test suite: **41 passed**
+- `git diff --check`: clean
+- working tree clean
+- resource/reconciliation commit: `959c73d`
+
+This remains a local sandbox only. It does not add outgoing payments, spend grants, custody, wallet signing, or XRPL transaction submission.
