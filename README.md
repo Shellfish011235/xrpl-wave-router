@@ -312,3 +312,50 @@ Optimization chooses.
 Assurance authorizes.
 Execution obeys.
 ```
+
+
+## 2026-09-24 checkpoints
+
+### Quote-only settlement intent
+
+The controlled `POST /jobs` path now returns a formal quote-only settlement/accounting intent after successful bounded execution.
+
+The intent binds the job, task, route receipt, provider, amount, and quote while keeping these boundaries explicit:
+
+- payment authority remains disabled
+- wallet signing remains disabled
+- settlement authorization remains disabled
+- settlement execution remains disabled
+- human approval is still required
+
+Verification for this slice:
+
+- TypeScript typecheck: green
+- test suite: **19 passed**
+- `git diff --check`: clean
+
+### Simulated accounting journal
+
+The in-memory ledger now keeps an audit journal for the simulated `reserve → post / void` lifecycle.
+
+Each journal entry records:
+
+- sequence number
+- job ID
+- action: `RESERVE`, `POST`, or `VOID`
+- integer microunit amount
+- original reservation amount
+- resulting available balance
+- explicit simulated-only status
+
+The adapter rejects invalid amounts, preserves accounting state on failed overcharge attempts, and returns copies of journal entries so callers cannot mutate internal accounting history.
+
+Verification for this slice:
+
+- TypeScript typecheck: green
+- test suite: **25 passed**
+- `git diff --check`: clean
+- working tree clean after commit/push
+- commit: `0cef71d`
+
+This remains internal simulated accounting only. It does not add custody, real settlement, or unilateral financial authority.
