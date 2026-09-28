@@ -73,6 +73,55 @@ export function canonicalExecutionGrantBytes(
   );
 }
 
+export function verifyShellfishEnvelopeSignature(
+  envelope: Record<string, unknown>,
+): boolean {
+  const key = assuranceKeyFromEnvironment();
+
+  if (!key) {
+    return false;
+  }
+
+  const suppliedValue =
+    envelope.signature;
+
+  if (
+    typeof suppliedValue !== "string"
+  ) {
+    return false;
+  }
+
+  const supplied =
+    suppliedValue.trim();
+
+  if (!/^[0-9a-fA-F]{64}$/.test(supplied)) {
+    return false;
+  }
+
+  const expected = crypto
+    .createHmac("sha256", key)
+    .update(
+      canonicalExecutionGrantBytes(envelope),
+    )
+    .digest("hex");
+
+  const expectedBuffer =
+    Buffer.from(expected, "hex");
+
+  const suppliedBuffer =
+    Buffer.from(supplied, "hex");
+
+  return (
+    expectedBuffer.length ===
+      suppliedBuffer.length &&
+    crypto.timingSafeEqual(
+      expectedBuffer,
+      suppliedBuffer,
+    )
+  );
+}
+
+
 export function verifyExecutionGrantSignature(
   grant: ExecutionGrant,
 ): boolean {
