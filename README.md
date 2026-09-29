@@ -298,7 +298,7 @@ Near-term work should preserve the routing/authorization separation while improv
 5. introduce observational regime/liquidity/risk/settlement graph inputs
 6. exercise XRPL settlement path inspection on Testnet
 7. harden ledger/accounting adapters before enabling real settlement flows
-8. revisit Open Payments after its dependency/security path is acceptable
+8. keep the Open Payments SDK out of the runtime until a concrete integration needs it; re-review security and API compatibility before adding it back
 9. add production-grade audit logging, governance, and compliance controls before any commercial or regulated activation
 
 ## Design principle
@@ -363,7 +363,7 @@ This remains internal simulated accounting only. It does not add custody, real s
 
 ### Open Payments quote-only sandbox
 
-The Open Payments adapter now exposes a deliberately non-settling sandbox surface:
+The Open Payments adapter exposes a deliberately non-settling local sandbox surface. It does not currently import the Open Payments SDK; the interface is preserved so a reviewed SDK-backed adapter can be added later:
 
 - destination inspection is observational only
 - quotes are simulated and use integer-string amounts

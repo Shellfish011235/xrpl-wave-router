@@ -10,7 +10,6 @@
     "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
-    "@interledger/open-payments": "^6.0.0",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "xrpl": "^4.3.0"
