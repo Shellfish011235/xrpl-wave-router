@@ -30,6 +30,23 @@ The project remains **non-custodial by default**. It does not give the router un
 
 See `PROJECT-BOUNDARIES.md` for the current operating boundaries.
 
+## Hackathon MVP
+
+A judge-ready end-to-end demo now lives in `HACKATHON-MVP.md`.
+
+The fast path is:
+
+```bash
+# terminal 1
+npm run dev
+
+# terminal 2
+npm run demo
+```
+
+The demo shows constrained provider selection, a tamper-evident route receipt, an externally signed execution grant bound to the exact route, replay protection, bounded execution, and simulated reserve/post accounting while payment authority remains disabled.
+
+
 ## Architecture
 
 ```text
