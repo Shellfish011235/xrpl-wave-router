@@ -222,6 +222,21 @@ GitHub Actions currently runs:
 
 The assurance tests cover fail-closed behavior including missing artifacts, malformed grants/receipts, expiry, invalid signatures, protected-field tampering, route-receipt tampering, binding mismatches, cost ceilings, and replay attempts.
 
+## Verification and release-readiness
+
+This repository is independently verifiable with its documented local toolchain.
+
+Local verification:
+
+```bash
+npm run typecheck
+npm test
+```
+
+Additional security evidence is provided through the repository's GitHub security workflow and dependency-audit process. Read-only verification tooling may record branch, commit, runtime, test, and security-check evidence, but it must not modify source files or expand execution authority.
+
+Verification does not grant payment, wallet, signing, settlement, commit, push, deployment, or promotion authority. Experimental integrations should preserve that separation and keep provenance for what changed and when.
+
 ## Ledger and payment state
 
 The current default ledger is `InMemoryLedger`.
