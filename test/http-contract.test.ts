@@ -55,10 +55,13 @@ test("quote returns a deterministic route for a valid request", async () => {
     const payload = await response.json() as {
       provider: { id: string };
       reservedMicrounits: number;
+      score: number;
       reasons: string[];
     };
+    assert.equal(typeof payload.provider.id, "string");
     assert.ok(payload.provider.id);
     assert.ok(Number.isSafeInteger(payload.reservedMicrounits));
+    assert.equal(typeof payload.score, "number");
     assert.ok(Array.isArray(payload.reasons));
   });
 });
@@ -85,5 +88,6 @@ test("malformed quote input is bounded with 422", async () => {
     assert.equal(response.status, 422);
     const payload = await response.json() as { error?: unknown };
     assert.equal(typeof payload.error, "string");
+    assert.equal((payload.error as string).includes("Error:"), false);
   });
 });
