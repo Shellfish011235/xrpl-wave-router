@@ -361,7 +361,7 @@ if (isMainModule) {
     process.env.PORT ?? 3000,
   );
 
-  app.listen(port, () => {
+  app.listen(port, "127.0.0.1", () => {
     console.log(
       `XRPL AI Pathfinder MVP listening on http://localhost:${port}`,
     );
