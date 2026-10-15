@@ -259,3 +259,29 @@ Current policy-mapping candidates for Shellfish (read-only design work only):
 - presence or absence of required Credential / PermissionedDomain / share MPToken relationships.
 
 No autonomous lending execution, signing, deposit, withdrawal, loan creation, or Mainnet activity was implemented. Next step remains to determine the exact access requirements for public versus credential-gated vaults and define the read-only policy contract Shellfish would consume during the event build.
+## Devnet lending-state follow-up — 2026-10-15
+Gate B is now **PASS**: real Devnet `Vault`, `LoanBroker`, and `Loan` objects can be read reliably from validated ledger state.
+
+Additional findings:
+- A scan of 200 broker-linked vaults found 184 open-ended vaults and 16 closed-ended vaults already in Redemption; one private vault was observed.
+- A broader scan reached 568 LoanBroker objects and found two closed-ended vaults currently in **Investment** phase. No currently-open Subscription-phase vault was found in that scan before the bounded scan stopped.
+- Example active Investment vault: `F87A90D9772F9F74B4A4225598AF4DB6C9683D7EA84838B2B83EDD3FB497512D` (public; MPT asset).
+- Example private vault: `E50C8317AE1C22ECAA628CA853629C4E916E13E55BF4A57AE3705C106B4917C6`, with `lsfVaultPrivate` set and share `DomainID` `0471CCFBD93F4D3C89C646ADC4EF68967565799BAFD156A40C1AC40AE1AF131F`.
+- That PermissionedDomain accepts credential type hex `41646D696E697374726174696F6E`, which decodes to `Administration`, issued by `rDSXct4YucKz6XLDVuMrWjyxTDZ3PQCQnv`.
+- Our disposable Devnet agent and approved-destination accounts still return zero account objects, so they do not currently hold the required Credential or vault-share MPToken and are not proven eligible for that private vault.
+
+Important distinction: lifecycle phase is a property of the vault. Account eligibility is a separate question. A vault can be in Subscription while a specific account is still ineligible because it lacks required credentials/domain access. Never label our account `SUBSCRIBED` or `APPROVED` merely because a vault is accepting deposits.
+
+### Shellfish read-only policy inputs now supported by evidence
+- network and validated-ledger identity;
+- vault ID / owner / pseudo-account / asset;
+- public vs private (`Flags & 0x00010000`);
+- share PermissionedDomain ID, when present;
+- SubscriptionDate / RedemptionDate and derived `SUBSCRIPTION | INVESTMENT | REDEMPTION | OPEN_ENDED` lifecycle;
+- AssetsTotal / AssetsAvailable / LossUnrealized / accounting version where present;
+- LoanBroker ID / VaultID / DebtTotal / DebtMaximum / cover fields / active loan count where present;
+- Loan borrower / flags / principal / total outstanding / payment schedule / grace period;
+- subject account Credential and MPToken/share holdings.
+
+### Next safe pre-event design gate
+Define a read-only `LendingStateEvidence` contract that transports those normalized ledger facts into Shellfish policy without granting transaction authority. Any deposit/withdraw/LoanSet execution remains reserved for the event build.
