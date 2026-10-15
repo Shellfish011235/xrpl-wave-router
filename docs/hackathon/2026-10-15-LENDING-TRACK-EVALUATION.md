@@ -218,3 +218,44 @@ Current state:
 **Lending is technically viable enough to keep as the high-upside primary candidate.** The strongest framing is not "AI makes a loan". It is: **an agentic risk-and-authority layer that lets AI interact with XRPL-native lending without giving the model unrestricted financial authority.**
 
 Agentic Finance remains the safer fallback and shares nearly all of the same underlying infrastructure, so this evaluation does not create a dead-end branch.
+## Read-only Devnet object inspection — 2026-10-15
+Fresh validated-ledger inspection confirms real Lending Protocol objects exist on Devnet.
+
+Observed objects:
+- Closed-ended USD Vault `47BA9CDB054986BFAC9F2191B3917D689300E4656DB20D3BC52BFFC3D492327A`.
+- Its LoanBroker `57CDE6AF731DA6949E2CFE07C36B81A2BCB4D0FDDE1D665CB9B41B61D35B8C33`.
+- A live Loan object `000004C3A9E21DBFA6E945B27BDE9A55DC53E9E3C82CE65D017E134519E0CECD` linked to that broker.
+- A second XRP Vault `F230A0F8FECBA93727CFE50B5A40EC747D4EBE50A3262D2C83A2CC09D09E5DA8` with a corresponding LoanBroker.
+
+Closed-ended vault state observed:
+- Asset: issued USD.
+- AssetsTotal: `10000.15696446053`.
+- AssetsAvailable: `5125.0796876104`.
+- SubscriptionDate: 2026-09-15T06:42:21Z.
+- RedemptionDate: 2026-09-16T07:09:01Z.
+- Devnet validated-ledger close time during inspection: 2026-10-15T15:18:30Z.
+- Therefore this specific vault is currently in the **REDEMPTION** phase, not Subscription or Investment.
+
+Loan state observed:
+- Borrower: `r9LEzaf46tqH8CpGtL6tvCJshwK23dSQUW`.
+- InterestRate: `50000` in ledger-native representation.
+- PrincipalOutstanding: `4875.07727685013`.
+- TotalValueOutstanding: `4878.10781680558`.
+- PaymentRemaining: `195`.
+- PaymentInterval: `400`.
+- GracePeriod: `60`.
+
+Our two disposable Devnet accounts currently return **zero account objects**. No Credential, MPToken, PermissionedDomain, Vault, LoanBroker, or Loan relationship is present for either account. This is important: Devnet protocol availability is proven, but our account has **not** been shown to be subscribed, credentialed, or otherwise eligible for a gated vault.
+
+Current policy-mapping candidates for Shellfish (read-only design work only):
+- network_id / validated ledger context;
+- VaultID and asset;
+- SubscriptionDate / RedemptionDate -> derived lifecycle phase;
+- VaultKind / WithdrawalPolicy;
+- AssetsTotal / AssetsAvailable;
+- LoanBrokerID / DebtTotal / OwnerCount;
+- borrower / principal outstanding / total value outstanding;
+- payment schedule / grace period / remaining payments;
+- presence or absence of required Credential / PermissionedDomain / share MPToken relationships.
+
+No autonomous lending execution, signing, deposit, withdrawal, loan creation, or Mainnet activity was implemented. Next step remains to determine the exact access requirements for public versus credential-gated vaults and define the read-only policy contract Shellfish would consume during the event build.
