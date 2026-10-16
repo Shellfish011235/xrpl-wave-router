@@ -13,6 +13,7 @@ import { executeProvider } from "./services/executor.js";
 import { providerOffers } from "./services/providers.js";
 import { consumeAssuranceNonce } from "./services/replayStore.js";
 import { findBestRoute } from "./services/router.js";
+import { buildRouteReceipt } from "./services/routeReceipt.js";
 import { buildSettlementIntent } from "./services/settlementIntent.js";
 import type {
   AuthorizedJobRequest,
@@ -169,6 +170,45 @@ app.post("/quote", (req, res) => {
         error instanceof Error
           ? error.message
           : "Unable to quote route.",
+    });
+  }
+});
+
+app.post("/route", (req, res) => {
+  try {
+    const body =
+      req.body as JobRequest & {
+        taskId?: string;
+      };
+
+    if (!isNonEmptyString(body.taskId)) {
+      res.status(400).json({
+        error: "TASK_ID_REQUIRED",
+      });
+      return;
+    }
+
+    const route = findBestRoute(
+      body,
+      providerOffers,
+    );
+
+    const routeReceipt =
+      buildRouteReceipt(
+        body.taskId,
+        route,
+      );
+
+    res.json({
+      route,
+      routeReceipt,
+    });
+  } catch (error) {
+    res.status(422).json({
+      error:
+        error instanceof Error
+          ? error.message
+          : "Unable to route request.",
     });
   }
 });
