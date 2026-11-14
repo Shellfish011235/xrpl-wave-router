@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "typecheck": "tsc --noEmit",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@interledger/open-payments": "^6.0.0",

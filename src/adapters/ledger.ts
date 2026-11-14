@@ -5,11 +5,18 @@ export interface LedgerAdapter {
   balance(): Promise<number>;
 }
 
+function assertMicrounits(amount: number, label: string): void {
+  if (!Number.isSafeInteger(amount) || amount < 0) {
+    throw new Error(`${label} must be a non-negative safe integer.`);
+  }
+}
+
 export class InMemoryLedger implements LedgerAdapter {
   private available = 1_000_000;
   private readonly reservations = new Map<string, number>();
 
   async reserve(jobId: string, amount: number): Promise<void> {
+    assertMicrounits(amount, "Reservation amount");
     if (this.reservations.has(jobId)) throw new Error("Duplicate job ID.");
     if (amount > this.available) throw new Error("Insufficient balance.");
     this.available -= amount;
@@ -17,6 +24,7 @@ export class InMemoryLedger implements LedgerAdapter {
   }
 
   async post(jobId: string, amount: number): Promise<void> {
+    assertMicrounits(amount, "Post amount");
     const reserved = this.reservations.get(jobId);
     if (reserved === undefined) throw new Error("Reservation not found.");
     if (amount > reserved) throw new Error("Charge exceeds reservation.");
