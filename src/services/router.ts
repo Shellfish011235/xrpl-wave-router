@@ -1,4 +1,4 @@
-import type { JobRequest, ProviderOffer, RouteQuote } from "../types/domain.js";
+import type { JobRequest, PrivacyClass, ProviderOffer, RouteQuote } from "../types/domain.js";
 
 const privacyRank = {
   standard: 0,
@@ -6,16 +6,56 @@ const privacyRank = {
   "local-only": 2,
 } as const;
 
+function isPrivacyClass(value: unknown): value is PrivacyClass {
+  return value === "standard" || value === "no-retention" || value === "local-only";
+}
+
 function normalize(value: number, ceiling: number): number {
-  return Math.min(value / Math.max(ceiling, 1), 1);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (!Number.isFinite(ceiling) || ceiling <= 0) return 0;
+  return Math.min(value / ceiling, 1);
+}
+
+function assertValidRequest(request: JobRequest): void {
+  if (
+    request === null ||
+    typeof request !== "object" ||
+    typeof request.task !== "string" ||
+    request.task.length === 0 ||
+    !Number.isSafeInteger(request.maxCostMicrounits) ||
+    request.maxCostMicrounits < 0 ||
+    !Number.isFinite(request.maxLatencyMs) ||
+    request.maxLatencyMs < 0 ||
+    !Number.isFinite(request.minimumQuality) ||
+    request.minimumQuality < 0 ||
+    request.minimumQuality > 1 ||
+    !isPrivacyClass(request.privacy)
+  ) {
+    throw new Error("Invalid job request.");
+  }
+}
+
+function isSelectableOffer(offer: ProviderOffer): boolean {
+  return offer.available === true &&
+    typeof offer.capability === "string" &&
+    Number.isSafeInteger(offer.priceMicrounits) &&
+    offer.priceMicrounits >= 0 &&
+    Number.isFinite(offer.latencyMs) &&
+    offer.latencyMs >= 0 &&
+    Number.isFinite(offer.quality) &&
+    offer.quality >= 0 &&
+    offer.quality <= 1 &&
+    isPrivacyClass(offer.privacy);
 }
 
 export function findBestRoute(
   request: JobRequest,
   offers: ProviderOffer[],
 ): RouteQuote {
+  assertValidRequest(request);
+
   const eligible = offers.filter((offer) =>
-    offer.available &&
+    isSelectableOffer(offer) &&
     offer.capability === request.task &&
     offer.priceMicrounits <= request.maxCostMicrounits &&
     offer.latencyMs <= request.maxLatencyMs &&
